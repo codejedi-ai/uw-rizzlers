@@ -1,6 +1,8 @@
 import { defineConfig } from 'vite'
 import preact from '@preact/preset-vite'
 import path from 'path'
+import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill'
+import { NodeModulesPolyfillPlugin } from '@esbuild-plugins/node-modules-polyfill'
 
 export default defineConfig({
   plugins: [preact()],
@@ -15,6 +17,14 @@ export default defineConfig({
     global: 'globalThis',
   },
   optimizeDeps: {
-    include: ['plotly.js', 'react-plotly.js']
+    include: ['plotly.js', 'react-plotly.js'],
+    esbuildOptions: {
+      plugins: [
+        NodeGlobalsPolyfillPlugin({
+          buffer: true
+        }),
+        NodeModulesPolyfillPlugin()
+      ]
+    }
   }
 })
