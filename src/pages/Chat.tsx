@@ -8,7 +8,6 @@ interface Message {
   content: string
 }
 
-const rooms = ['Music Chat', 'Event Planning', 'Genre Discussion', 'Collaborations']
 const rooms = ['Perspective Chat', 'Vibe Analysis', 'Experience Discussion', 'Event Planning']
 const mockMessages = [
   { id: 1, room: 'Perspective Chat', sender: 'ViewSeeker', content: 'This experience completely changed how I see rainy days! 🌧️' },
