@@ -1,49 +1,24 @@
 {
-  "name": "perceptr-vite-preact",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "@auth0/auth0-react": "^2.2.4",
-    "buffer": "^6.0.3",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "framer-motion": "^11.18.1",
-    "lucide-react": "^0.544.0",
-    "plotly.js": "^2.35.3",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-plotly.js": "^2.6.0",
-    "react-router-dom": "^6.28.0",
-    "tailwind-merge": "^2.6.0",
-    "three": "^0.121.0",
-    "vanta": "^0.5.24"
-  },
-  "devDependencies": {
-    "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
-    "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
-    "@types/node": "^20.10.5",
-    "@types/plotly.js": "^2.35.2",
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
-    "@types/react-plotly.js": "^2.6.3",
-    "@typescript-eslint/eslint-plugin": "^6.14.0",
-    "@typescript-eslint/parser": "^6.14.0",
-    "@vitejs/plugin-react": "^4.3.4",
-    "autoprefixer": "^10.4.16",
-    "eslint": "^8.55.0",
-    "eslint-plugin-react-hooks": "^4.6.0",
-    "eslint-plugin-react-refresh": "^0.4.5",
-    "postcss": "^8.4.32",
-    "tailwindcss": "^3.4.1",
-    "tailwindcss-animate": "^1.0.7",
-    "typescript": "^5.2.2",
-    "vite": "^5.0.8"
-  }
+    "name": "uw-rizzlords",
+    "private": true,
+    "version": "0.1.0",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "build:functions": "cd netlify/functions && tsc",
+        "preview": "vite preview"
+    },
+    "dependencies": {
+        "preact": "^10.19.3"
+    },
+    "devDependencies": {
+        "@preact/preset-vite": "^2.7.0",
+        "netlify-cli": "^23.6.0",
+        "typescript": "^5.2.2",
+        "vite": "^6.2.6"
+    },
+    "eslintConfig": {
+        "extends": "preact"
+    }
 }
