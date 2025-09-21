@@ -10,22 +10,21 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "preact": "^10.19.3",
-    "preact-router": "^4.1.2",
+    "buffer": "^6.0.3",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "firebase": "^10.7.1",
     "framer-motion": "^11.18.1",
     "lucide-preact": "^0.473.0",
     "plotly.js": "^2.35.3",
     "react-plotly.js": "^2.6.0",
-    "three": "^0.121.0",
-    "vanta": "^0.5.24",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
     "tailwind-merge": "^2.6.0",
-    "buffer": "^6.0.3"
+    "three": "^0.121.0",
+    "vanta": "^0.5.24"
   },
   "devDependencies": {
-    "@preact/preset-vite": "^2.8.1",
+    "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
+    "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
     "@types/node": "^20.10.5",
     "@types/plotly.js": "^2.35.2",
     "@types/react-plotly.js": "^2.6.3",
@@ -39,8 +38,6 @@
     "tailwindcss": "^3.4.1",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^5.2.2",
-    "vite": "^5.0.8",
-    "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
-    "@esbuild-plugins/node-modules-polyfill": "^0.2.2"
+    "vite": "^5.0.8"
   }
 }
