@@ -19,7 +19,7 @@ interface Event {
 
 export default function MainApp() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [events, setEvents] = useState<Event[]>([]);
+  const [events] = useState<Event[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [draggedEvent, setDraggedEvent] = useState<Event | null>(null);
@@ -29,11 +29,11 @@ export default function MainApp() {
   const mockEvents: Event[] = [
     {
       id: '1',
-      title: 'Tech Meetup',
-      description: 'Join us for an exciting tech meetup where we discuss the latest trends in software development.',
-      date: '2024-01-15',
-      time: '18:00',
-      location: 'CSE Building',
+      title: 'React Workshop',
+      description: 'Learn the fundamentals of React development with hands-on coding exercises.',
+      date: '2024-03-15',
+      time: '2:00 PM',
+      location: 'CSE Building Room 303',
       category: 'Tech',
       attendees: 15,
       maxAttendees: 30,
@@ -45,12 +45,12 @@ export default function MainApp() {
     },
     {
       id: '2',
-      title: 'Study Group',
-      description: 'Weekly study group for CSE 142. Bring your questions and lets solve problems together!',
-      date: '2024-01-16',
-      time: '14:00',
-      location: 'Suzzallo Library',
-      category: 'Academic',
+      title: 'Coffee & Code',
+      description: 'Casual meetup for developers to network and share experiences.',
+      date: '2024-03-18',
+      time: '10:00 AM',
+      location: 'HUB Starbucks',
+      category: 'Social',
       attendees: 8,
       maxAttendees: 12,
       x: 400,
@@ -61,12 +61,12 @@ export default function MainApp() {
     },
     {
       id: '3',
-      title: 'Basketball Game',
-      description: 'Come watch the Huskies take on their rivals in this exciting basketball matchup!',
-      date: '2024-01-17',
-      time: '19:00',
-      location: 'Alaska Airlines Arena',
-      category: 'Sports',
+      title: 'AI/ML Symposium',
+      description: 'Explore the latest trends in artificial intelligence and machine learning.',
+      date: '2024-03-22',
+      time: '1:00 PM',
+      location: 'Kane Hall 130',
+      category: 'Workshop',
       attendees: 25,
       maxAttendees: 50,
       x: 300,
@@ -77,12 +77,12 @@ export default function MainApp() {
     },
     {
       id: '4',
-      title: 'Coffee Chat',
-      description: 'Casual coffee meetup for international students. Great way to make new friends!',
-      date: '2024-01-18',
-      time: '10:00',
-      location: 'HUB Starbucks',
-      category: 'Social',
+      title: 'Study Group',
+      description: 'Weekly study session for CSE 142 students.',
+      date: '2024-03-20',
+      time: '7:00 PM',
+      location: 'Odegaard Library',
+      category: 'Academic',
       attendees: 6,
       maxAttendees: 10,
       x: 600,
@@ -94,14 +94,10 @@ export default function MainApp() {
   ];
 
   useEffect(() => {
-    setEvents(mockEvents);
-  }, []);
+    draw();
+  }, [events, selectedEvent]);
 
-  useEffect(() => {
-    drawCanvas();
-  }, [events, draggedEvent]);
-
-  const drawCanvas = () => {
+  const draw = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -261,8 +257,7 @@ export default function MainApp() {
   const getEventAt = (x: number, y: number): Event | null => {
     for (let i = events.length - 1; i >= 0; i--) {
       const event = events[i];
-      if (x >= event.x && x <= event.x + 200 && 
-          y >= event.y && y <= event.y + 150) {
+      if (x >= event.x && x <= event.x + 200 && y >= event.y && y <= event.y + 150) {
         return event;
       }
     }
@@ -277,15 +272,17 @@ export default function MainApp() {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    const clickedEvent = getEventAt(x, y);
-    
-    if (clickedEvent) {
+    const event = getEventAt(x, y);
+    if (event) {
+      setSelectedEvent(event);
       setIsDragging(true);
-      setDraggedEvent(clickedEvent);
+      setDraggedEvent(event);
       setDragOffset({
-        x: x - clickedEvent.x,
-        y: y - clickedEvent.y
+        x: x - event.x,
+        y: y - event.y
       });
+    } else {
+      setSelectedEvent(null);
     }
   };
 
@@ -299,36 +296,19 @@ export default function MainApp() {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    const newX = x - dragOffset.x;
-    const newY = y - dragOffset.y;
-
-    setEvents(prevEvents => 
-      prevEvents.map(event => 
-        event.id === draggedEvent.id 
-          ? { ...event, x: newX, y: newY }
-          : event
-      )
+    // Update event position
+    const updatedEvents = events.map(event => 
+      event.id === draggedEvent.id 
+        ? { ...event, x: x - dragOffset.x, y: y - dragOffset.y }
+        : event
     );
+    
+    draw();
   };
 
   const handleMouseUp = () => {
     setIsDragging(false);
     setDraggedEvent(null);
-    setDragOffset({ x: 0, y: 0 });
-  };
-
-  const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (isDragging) return;
-
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    const clickedEvent = getEventAt(x, y);
-    setSelectedEvent(clickedEvent);
   };
 
   return (
@@ -429,7 +409,6 @@ export default function MainApp() {
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
-        onClick={handleCanvasClick}
       />
 
       {/* Sidebar */}
