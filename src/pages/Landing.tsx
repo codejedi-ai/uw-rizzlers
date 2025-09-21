@@ -14,19 +14,16 @@ const smoothTransition = {
 export default function Landing() {
   const { user, signInWithGoogle } = useAuth()
   const navigate = useNavigate()
-  const [stage, setStage] = useState(0)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     if (user) {
-      navigate('/survey')
-      return
-    }
-
-    const timer1 = setTimeout(() => setStage(1), 2000)
-    const timer2 = setTimeout(() => setStage(2), 4000)
-    return () => {
-      clearTimeout(timer1)
-      clearTimeout(timer2)
+      // Show loading screen for 3 seconds then go to dashboard
+      const timer = setTimeout(() => {
+        setIsLoading(false)
+        navigate('/home')
+      }, 3000)
+      return () => clearTimeout(timer)
     }
   }, [user, navigate])
 
@@ -43,6 +40,43 @@ export default function Landing() {
     await signInWithGoogle()
   }
 
+  // Show loading screen if user is authenticated
+  if (user && isLoading) {
+    return (
+      <VantaBackground>
+        <div className="flex flex-col items-center justify-center min-h-screen text-white">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={smoothTransition}
+            className="text-center"
+          >
+            <h1 className="text-6xl font-bold mb-8">UW-Rizzlers</h1>
+            <div className="flex items-center justify-center space-x-2 mb-4">
+              {[...Array(3)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="w-3 h-3 bg-white rounded-full"
+                  animate={{
+                    y: [-10, 0, -10],
+                    opacity: [0.5, 1, 0.5],
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    delay: i * 0.2,
+                    ease: "easeInOut"
+                  }}
+                />
+              ))}
+            </div>
+            <p className="text-xl text-gray-300">Loading your campus events...</p>
+          </motion.div>
+        </div>
+      </VantaBackground>
+    )
+  }
+
   return (
     <VantaBackground>
       <div className="flex flex-col items-center justify-center min-h-screen text-white overflow-hidden">
@@ -51,44 +85,36 @@ export default function Landing() {
           transition={smoothTransition}
           className="flex flex-col items-center"
         >
-          <AnimatePresence mode="wait">
-            {stage === 0 && (
-              <motion.h1
-                key="hello"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={smoothTransition}
-                className="text-5xl font-bold mb-8"
-              >
-                Hi there :)
-              </motion.h1>
-            )}
-            {stage >= 1 && (
-              <motion.h1
-                key="perceptr"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  ...smoothTransition,
-                  delay: stage === 1 ? 0.3 : 0
-                }}
-                className="text-6xl font-bold mb-8"
-              >
-                <div className='flex flex-col items-center gap-8'>
-                  Perceptr 🎭
-                  <Button 
-                    variant="outline" 
-                    size="lg"
-                    className="text-lg px-6 py-3 rounded-full bg-white text-black hover:bg-gray-200 transition-all duration-300 ease-in-out transform hover:scale-105"
-                    onClick={handleGetStarted}
-                  >
-                    Analyze Your Perspective
-                  </Button>
-                </div>
-              </motion.h1>
-            )}
-          </AnimatePresence>
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={smoothTransition}
+            className="text-6xl font-bold mb-8"
+          >
+            UW-Rizzlers 🎉
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...smoothTransition, delay: 0.3 }}
+            className="text-xl text-gray-300 mb-8 text-center max-w-md"
+          >
+            Discover and create amazing campus events at University of Waterloo
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...smoothTransition, delay: 0.6 }}
+          >
+            <Button 
+              variant="outline" 
+              size="lg"
+              className="text-lg px-8 py-4 rounded-full bg-white text-black hover:bg-gray-200 transition-all duration-300 ease-in-out transform hover:scale-105"
+              onClick={handleGetStarted}
+            >
+              Get Started
+            </Button>
+          </motion.div>
         </motion.div>
       </div>
     </VantaBackground>
