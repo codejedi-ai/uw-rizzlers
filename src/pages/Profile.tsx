@@ -7,27 +7,27 @@ import { LoadingScreen } from '../components/LoadingScreen'
 const questions = [
   {
     id: 1,
-    question: "What's your music story? Tell us about your musical journey and preferences.",
+    question: "What's your perspective story? Tell us about your journey and worldview.",
     maxWords: 500
   },
   {
     id: 2,
-    question: "How has your cultural background influenced your music taste and event hosting style?",
+    question: "How has your cultural background influenced your perspective and event hosting style?",
     maxWords: 500
   },
   {
     id: 3,
-    question: "What genres, artists, or music experiences inspire the events you want to host?",
+    question: "What experiences, ideas, or perspectives inspire the events you want to host?",
     maxWords: 500
   },
   {
     id: 4,
-    question: "Describe a memorable music event or party you've attended. What made the vibe special?",
+    question: "Describe a memorable event or gathering you've attended. What made the atmosphere special?",
     maxWords: 500
   },
   {
     id: 5,
-    question: "What's your dream music event? Describe the perfect vibe you'd want to create.",
+    question: "What's your dream event? Describe the perfect atmosphere you'd want to create.",
     maxWords: 500
   }
 ]
@@ -74,7 +74,7 @@ export default function Profile() {
           setEditedAnswers(answerMap)
 
           const instagramUsername = userData.social1
-            ? userData.social1.replace('https://www.instagram.com/', '')
+            ? userData.social1.replace('https://instagram.com/', '')
             : ''
 
           setSocialInfo({
@@ -208,7 +208,7 @@ export default function Profile() {
             </div>
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-gray-700 font-medium">Spotify Profile (for playlist analysis)</label>
+                <label className="text-gray-700 font-medium">Social Profile (for perspective analysis)</label>
                 <div className="flex items-center space-x-2">
                   <span className="text-gray-500">URL:</span>
                   {isEditing ? (
@@ -219,7 +219,7 @@ export default function Profile() {
                       className="flex-1 p-2 border border-gray-200 rounded-lg 
                       focus:ring-2 focus:ring-blue-100 focus:border-blue-400 
                       outline-none transition-all duration-200 text-gray-700"
-                      placeholder="https://open.spotify.com/user/..."
+                      placeholder="https://instagram.com/username"
                     />
                   ) : (
                     <span className="text-gray-600">{socialInfo.instagram}</span>
@@ -228,7 +228,7 @@ export default function Profile() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-gray-700 font-medium">Apple Music Profile</label>
+                <label className="text-gray-700 font-medium">Additional Profile</label>
                 {isEditing ? (
                   <input
                     type="text"
@@ -237,7 +237,7 @@ export default function Profile() {
                     className="w-full p-2 border border-gray-200 rounded-lg 
                     focus:ring-2 focus:ring-blue-100 focus:border-blue-400 
                     outline-none transition-all duration-200 text-gray-700"
-                    placeholder="Apple Music profile URL"
+                    placeholder="Twitter, LinkedIn, or other profile URL"
                   />
                 ) : (
                   <p className="text-gray-600">{socialInfo.discord}</p>

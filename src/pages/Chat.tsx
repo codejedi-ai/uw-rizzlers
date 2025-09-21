@@ -9,12 +9,12 @@ interface Message {
 }
 
 const rooms = ['Music Chat', 'Event Planning', 'Genre Discussion', 'Collaborations']
-const rooms = ['Perspective Chat', 'Vibe Analysis', 'Playlist Discussion', 'Event Planning']
+const rooms = ['Perspective Chat', 'Vibe Analysis', 'Experience Discussion', 'Event Planning']
 const mockMessages = [
-  { id: 1, room: 'Perspective Chat', sender: 'VibeSeeker', content: 'This playlist completely changed how I see rainy days! 🌧️' },
-  { id: 2, room: 'Perspective Chat', sender: 'MoodCurator', content: 'Share the link! I love discovering new perspectives' },
-  { id: 3, room: 'Event Planning', sender: 'AtmosphereHost', content: 'Creating a "midnight reflections" gathering, need playlist suggestions!' },
-  { id: 4, room: 'Vibe Analysis', sender: 'SoundAnalyst', content: 'Anyone analyzed how lo-fi changes your perspective on productivity?' },
+  { id: 1, room: 'Perspective Chat', sender: 'ViewSeeker', content: 'This experience completely changed how I see rainy days! 🌧️' },
+  { id: 2, room: 'Perspective Chat', sender: 'PerspectiveCurator', content: 'Tell us more! I love discovering new perspectives' },
+  { id: 3, room: 'Event Planning', sender: 'AtmosphereHost', content: 'Creating a "midnight reflections" gathering, need atmosphere ideas!' },
+  { id: 4, room: 'Vibe Analysis', sender: 'VibeAnalyst', content: 'Anyone analyzed how different environments change your perspective?' },
 ]
 
 function RoomSelector({ rooms, currentRoom, onRoomChange }: {

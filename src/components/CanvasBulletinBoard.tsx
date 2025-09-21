@@ -89,7 +89,7 @@ export function CanvasBulletinBoard() {
       // Perspective emoji
       ctx.font = '20px Arial'
       ctx.fillStyle = '#ffffff'
-      ctx.fillText('🎭', card.x, card.y + 35)
+      ctx.fillText('👁️', card.x, card.y + 35)
     })
   }, [cards])
 
@@ -173,7 +173,7 @@ export function CanvasBulletinBoard() {
         </button>
         
         <h1 className="absolute left-1/2 transform -translate-x-1/2 text-3xl font-bold text-white animate-fade pt-4">
-          Perceptr - Perspective Board 🎭
+          Perceptr - Perspective Board 👁️
         </h1>
       </div>
 
@@ -209,13 +209,13 @@ export function CanvasBulletinBoard() {
               </div>
               
               <div>
-                <label className="block text-gray-300 mb-2">Vibe Description</label>
+                <label className="block text-gray-300 mb-2">Atmosphere Description</label>
                 <input
                   type="text"
                   value={newCard.vibe}
                   onChange={(e) => setNewCard(prev => ({ ...prev, vibe: e.target.value }))}
                   className="w-full p-2 rounded bg-gray-800 text-white border border-gray-600"
-                  placeholder="Dreamy, introspective, cosmic..."
+                  placeholder="Contemplative, inspiring, transformative..."
                 />
               </div>
               

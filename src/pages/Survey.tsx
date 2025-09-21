@@ -11,22 +11,22 @@ import { VantaBackground } from '../components/VantaBackground'
 const questions = [
   {
     id: 1,
-    question: "Share your favorite playlists or music profiles. What perspectives do they represent?",
+    question: "What perspectives do you bring to different situations? How do you see the world uniquely?",
     maxWords: 500
   },
   {
     id: 2,
-    question: "How do different music genres change your perspective on life and events?",
+    question: "How do different experiences change your perspective on life and events?",
     maxWords: 500
   },
   {
     id: 3,
-    question: "Describe how music helps you see the world differently. What vibes do you create?",
+    question: "Describe how you help others see the world differently. What atmosphere do you create?",
     maxWords: 500
   },
   {
     id: 4,
-    question: "What type of events do you want to host? How should the music shape the atmosphere?",
+    question: "What type of events do you want to host? How should the atmosphere shape people's perspectives?",
     maxWords: 500
   },
   {
@@ -36,7 +36,7 @@ const questions = [
   },
   {
     id: 6,
-    question: "Share your Spotify/Apple Music profiles so we can analyze your playlist vibes.",
+    question: "Share any social profiles that represent your perspective and worldview.",
     maxWords: 50,
     isSocialMedia: true
   }
@@ -245,7 +245,7 @@ export default function Survey() {
               {currentQuestion === 5 ? (
                 <div className="space-y-6">
                   <div className="space-y-2">
-                    <label className="text-gray-700 font-medium">Spotify Profile (for playlist analysis)</label>
+                    <label className="text-gray-700 font-medium">Social Profile (for perspective analysis)</label>
                     <div className="flex items-center space-x-2">
                       <span className="text-gray-500">Profile URL:</span>
                       <input
@@ -255,13 +255,13 @@ export default function Survey() {
                         className="flex-1 p-2 border border-gray-200 rounded-lg 
                         focus:ring-2 focus:ring-blue-100 focus:border-blue-400 
                         outline-none transition-all duration-200 text-gray-700"
-                        placeholder="https://open.spotify.com/user/..."
+                        placeholder="https://instagram.com/username"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-gray-700 font-medium">Apple Music Profile (optional)</label>
+                    <label className="text-gray-700 font-medium">Additional Profile (optional)</label>
                     <input
                       type="text"
                       value={socialMedia.discord}
@@ -269,7 +269,7 @@ export default function Survey() {
                       className="w-full p-2 border border-gray-200 rounded-lg 
                       focus:ring-2 focus:ring-blue-100 focus:border-blue-400 
                       outline-none transition-all duration-200 text-gray-700"
-                      placeholder="Apple Music profile URL"
+                      placeholder="Twitter, LinkedIn, or other profile URL"
                     />
                   </div>
                 </div>
