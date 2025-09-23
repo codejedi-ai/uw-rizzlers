@@ -35,6 +35,7 @@ export default function App({ onNavigate }: AppProps) {
     const [draggedPaperIndex, setDraggedPaperIndex] = useState(-1);
     const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
     const [hoveredButtonIndex, setHoveredButtonIndex] = useState(-1);
+    const [isHoveringPaper, setIsHoveringPaper] = useState(false);
     const [isDeleteMode, setIsDeleteMode] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [deletionStatus, setDeletionStatus] = useState<{ status: string; queueSize: number } | null>(null);
@@ -262,10 +263,22 @@ export default function App({ onNavigate }: AppProps) {
                     i === draggedPaperIndex ? PageEntityFactory.create({ ...events[draggedPaperIndex], x: newX, y: newY }) : paper
                 ));
             } else {
-                // Check for button hover
+                // Check for paper and button hover
                 const adjustedMouseX = (mouseX - panOffset.x) / scale;
                 const adjustedMouseY = (mouseY - panOffset.y) / scale;
                 
+                // Paper hover
+                let paperHover = false;
+                for (let i = 0; i < papers.length; i++) {
+                    const paper = papers[i];
+                    if (paper.hitTest(adjustedMouseX, adjustedMouseY) || paper.isClickOnPushPin(adjustedMouseX, adjustedMouseY)) {
+                        paperHover = true;
+                        break;
+                    }
+                }
+                setIsHoveringPaper(paperHover);
+
+                // Link button hover
                 let foundHover = false;
                 for (let i = 0; i < papers.length; i++) {
                     const paper = papers[i];
@@ -559,7 +572,7 @@ export default function App({ onNavigate }: AppProps) {
                         width: "calc(100% - 4px)",
                         height: "calc(100% - 4px)",
                         margin: "2px",
-                        cursor: hoveredButtonIndex !== -1 ? "pointer" : isDraggingPaper ? "grabbing" : isPanning ? "grabbing" : "grab",
+                        cursor: (isDraggingPaper || isPanning) ? "grabbing" : (isHoveringPaper ? "grab" : "default"),
                         touchAction: "none"
                     }}
                 />
