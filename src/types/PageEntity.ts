@@ -1,7 +1,9 @@
 import { Event } from "./Event";
 
-export abstract class Paper {
+export abstract class PageEntity {
   public isHoveringButton: boolean = false;
+  private positionObservers: Array<(id: string, x: number, y: number) => void> = [];
+  private deleteObservers: Array<(id: string) => void> = [];
 
   constructor(
     public event: Event,
@@ -17,6 +19,32 @@ export abstract class Paper {
     const extraPerChar = 2; // pixels per character
     const computed = minWidth + titleLength * extraPerChar;
     return Math.max(minWidth, Math.min(computed, maxWidth));
+  }
+
+  // Observer pattern: subscribe to position commits
+  addPositionObserver(cb: (id: string, x: number, y: number) => void) {
+    this.positionObservers.push(cb);
+  }
+
+  removePositionObserver(cb: (id: string, x: number, y: number) => void) {
+    this.positionObservers = this.positionObservers.filter(fn => fn !== cb);
+  }
+
+  commitPosition() {
+    this.positionObservers.forEach(cb => cb(this.event.id, this.event.x, this.event.y));
+  }
+
+  // Observer pattern: deletion subscription
+  addDeleteObserver(cb: (id: string) => void) {
+    this.deleteObservers.push(cb);
+  }
+
+  removeDeleteObserver(cb: (id: string) => void) {
+    this.deleteObservers = this.deleteObservers.filter(fn => fn !== cb);
+  }
+
+  notifyDelete() {
+    this.deleteObservers.forEach(cb => cb(this.event.id));
   }
 
   // Get push pin coordinates (75px above the paper center)

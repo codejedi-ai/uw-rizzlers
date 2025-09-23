@@ -58,7 +58,6 @@ function mapNotionPageToEvent(page: any): Event {
   const x = extractNumber(properties.X);
   const y = extractNumber(properties.Y);
   const buttonColor = extractText(properties['Button Color']) || '#4CAF50';
-  const type = extractText(properties.Type) === 'community' ? 'community' : 'event';
   const time = extractText(properties.Time) || undefined;
 
   // Generate color based on creation date
@@ -74,7 +73,6 @@ function mapNotionPageToEvent(page: any): Event {
     y,
     color,
     buttonColor,
-    type: type as 'event' | 'community',
     time,
     createdAt
   };
@@ -135,7 +133,6 @@ async function createPage(eventData: Omit<Event, 'id' | 'createdAt'>): Promise<E
         x: eventData.x,
         y: eventData.y,
         buttonColor: eventData.buttonColor,
-        type: eventData.type,
         time: eventData.time
       })
     });

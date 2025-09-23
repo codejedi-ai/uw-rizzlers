@@ -1,4 +1,4 @@
-import { Paper } from "./Paper";
+import { Paper } from "./PageEntity";
 import { Event } from "./Event";
 
 export class Community extends Paper {

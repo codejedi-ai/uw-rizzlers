@@ -1,4 +1,4 @@
-import { Paper } from "../types/Paper";
+import { Paper } from "../types/PageEntity";
 
 export interface RectangleOptions {
   offsetX: number;        // relative to paper's top-left

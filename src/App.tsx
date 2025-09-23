@@ -1,7 +1,8 @@
 
 import React, { useRef, useEffect, useState } from "react";
 import { Event } from "./types/Event";
-import { Paper } from "./types/Paper";
+import { PageEntity as Paper } from "./types/PageEntity";
+import { PageEntityFactory } from "./types/PageEntityFactory";
 import AddItemForm from "./components/AddItemForm";
 import Navbar from "./components/Navbar";
 import { workerManager } from "./utils/workerManager";
@@ -46,7 +47,7 @@ export default function App({ onNavigate }: AppProps) {
                 setIsLoading(true);
                 const loadedEvents = await workerManager.fetchEvents();
                 setEvents(loadedEvents);
-                setPapers(loadedEvents.map(event => new Paper(event)));
+                setPapers(loadedEvents.map(event => PageEntityFactory.create(event)));
             } catch (error) {
                 console.error('Failed to load events:', error);
                 // Fallback to empty state
@@ -258,7 +259,7 @@ export default function App({ onNavigate }: AppProps) {
                     i === draggedPaperIndex ? { ...event, x: newX, y: newY } : event
                 ));
                 setPapers(prev => prev.map((paper, i) => 
-                    i === draggedPaperIndex ? new Paper({ ...events[draggedPaperIndex], x: newX, y: newY }) : paper
+                    i === draggedPaperIndex ? PageEntityFactory.create({ ...events[draggedPaperIndex], x: newX, y: newY }) : paper
                 ));
             } else {
                 // Check for button hover
@@ -472,7 +473,7 @@ export default function App({ onNavigate }: AppProps) {
         return dayColors[dayOfWeek];
     };
 
-    const addEvent = async (title: string, description: string, link: string = "", buttonColor: string = "#4CAF50", type: 'event' | 'community' = 'event', time?: string) => {
+    const addEvent = async (title: string, description: string, link: string = "", buttonColor: string = "#4CAF50", time?: string) => {
         try {
             // Calculate center of screen in world coordinates
             const screenCenterX = ((window.innerWidth / 2) - panOffset.x) / scale;
@@ -487,15 +488,14 @@ export default function App({ onNavigate }: AppProps) {
                 y: screenCenterY,
                 color: getPaperColorByDay(now),
                 buttonColor,
-                type,
                 time,
                 createdAt: now
             };
 
-            const newEvent = await workerManager.createEvent(eventData);
+            const newEvent = await workerManager.createPage(eventData);
             setEvents(prev => [...prev, newEvent]);
-            setPapers(prev => [...prev, new Paper(newEvent)]);
-            console.log(`🎉 ${type} "${title}" added to bulletin board`);
+            setPapers(prev => [...prev, PageEntityFactory.create(newEvent)]);
+            console.log(`🎉 Paper "${title}" added to bulletin board`);
             setShowAddForm(false);
         } catch (error) {
             console.error('Failed to create event:', error);
@@ -508,7 +508,7 @@ export default function App({ onNavigate }: AppProps) {
         try {
             const eventToDelete = events[index];
             if (eventToDelete) {
-                console.log(`🗑️ Deleting ${eventToDelete.type}: "${eventToDelete.title}"`);
+                console.log(`🗑️ Deleting paper: "${eventToDelete.title}"`);
                 // Remove from UI immediately for better UX
                 setEvents(prev => prev.filter((_, i) => i !== index));
                 setPapers(prev => prev.filter((_, i) => i !== index));
@@ -516,9 +516,9 @@ export default function App({ onNavigate }: AppProps) {
                 // Queue for database deletion
                 const deletionSuccess = await deletionManager.deleteEvent(eventToDelete.id);
                 if (!deletionSuccess) {
-                    console.warn(`⚠️ Failed to queue ${eventToDelete.type} "${eventToDelete.title}" for database deletion`);
+                    console.warn(`⚠️ Failed to queue paper "${eventToDelete.title}" for database deletion`);
                 } else {
-                    console.log(`✅ ${eventToDelete.type} "${eventToDelete.title}" queued for database deletion`);
+                    console.log(`✅ Paper "${eventToDelete.title}" queued for database deletion`);
                 }
             }
         } catch (error) {

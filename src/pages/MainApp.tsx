@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Event } from '../types/Event';
-import { Paper } from '../types/Paper';
+import { Paper } from '../types/PageEntity';
 import { workerManager } from '../utils/workerManager';
 
 export default function MainApp() {
