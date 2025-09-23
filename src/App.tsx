@@ -23,8 +23,8 @@ export default function App({ onNavigate }: AppProps) {
     const [scale, setScale] = useState(1);
     const [lastPanPoint, setLastPanPoint] = useState({ x: 0, y: 0 });
     const [screenWidth, setScreenWidth] = useState(window.innerWidth);
-    const [isDraggingEvent, setIsDraggingEvent] = useState(false);
-    const [draggedEventIndex, setDraggedEventIndex] = useState(-1);
+    const [isDraggingPaper, setIsDraggingPaper] = useState(false);
+    const [draggedPaperIndex, setDraggedPaperIndex] = useState(-1);
     const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
     const [hoveredButtonIndex, setHoveredButtonIndex] = useState(-1);
     const [isDeleteMode, setIsDeleteMode] = useState(false);
@@ -177,7 +177,7 @@ export default function App({ onNavigate }: AppProps) {
             const adjustedMouseX = (mouseX - panOffset.x) / scale;
             const adjustedMouseY = (mouseY - panOffset.y) / scale;
 
-            // Check if clicking on an event (paper or push pin)
+            // Check if clicking on a paper (paper body, push pin, or link button)
             let clickedOnEvent = false;
             for (let i = events.length - 1; i >= 0; i--) {
                 const event = events[i];
@@ -204,8 +204,8 @@ export default function App({ onNavigate }: AppProps) {
                         break;
                     } else {
                         // Clicking on paper starts dragging
-                        setIsDraggingEvent(true);
-                        setDraggedEventIndex(i);
+                        setIsDraggingPaper(true);
+                        setDraggedPaperIndex(i);
                         setDragOffset({
                             x: adjustedMouseX - event.x,
                             y: adjustedMouseY - event.y
@@ -238,7 +238,7 @@ export default function App({ onNavigate }: AppProps) {
                 }));
                 
                 setLastPanPoint({ x: mouseX, y: mouseY });
-            } else if (isDraggingEvent && draggedEventIndex >= 0) {
+            } else if (isDraggingPaper && draggedPaperIndex >= 0) {
                 const adjustedMouseX = (mouseX - panOffset.x) / scale;
                 const adjustedMouseY = (mouseY - panOffset.y) / scale;
                 
@@ -246,10 +246,10 @@ export default function App({ onNavigate }: AppProps) {
                 const newY = adjustedMouseY - dragOffset.y;
                 
                 setEvents(prev => prev.map((event, i) => 
-                    i === draggedEventIndex ? { ...event, x: newX, y: newY } : event
+                    i === draggedPaperIndex ? { ...event, x: newX, y: newY } : event
                 ));
                 setPapers(prev => prev.map((paper, i) => 
-                    i === draggedEventIndex ? new Paper({ ...events[draggedEventIndex], x: newX, y: newY }) : paper
+                    i === draggedPaperIndex ? new Paper({ ...events[draggedPaperIndex], x: newX, y: newY }) : paper
                 ));
             } else {
                 // Check for button hover
@@ -291,24 +291,24 @@ export default function App({ onNavigate }: AppProps) {
         const handleMouseUp = () => {
             setIsPanning(false);
             
-            // If we were dragging an event, update its coordinates in the database
-            if (isDraggingEvent && draggedEventIndex >= 0) {
-                const latest = events[draggedEventIndex];
+            // If we were dragging a paper, update its coordinates in the database
+            if (isDraggingPaper && draggedPaperIndex >= 0) {
+                const latest = events[draggedPaperIndex];
                 if (latest) {
                     const { id, title, x, y } = latest;
                     // First exit drag state immediately
-                    setIsDraggingEvent(false);
-                    setDraggedEventIndex(-1);
+                    setIsDraggingPaper(false);
+                    setDraggedPaperIndex(-1);
                     // Fire-and-forget backend update (do not await)
                     workerManager.updateEvent(id, { x, y })
-                        .then(() => console.log(`✅ Enqueued coordinate update for "${title}" (${id}) to (${x}, ${y})`))
+                        .then(() => console.log(`✅ Enqueued coordinate update for paper "${title}" (${id}) to (${x}, ${y})`))
                         .catch((error) => console.error('Failed to update event coordinates:', error));
                     return;
                 }
             }
             
-            setIsDraggingEvent(false);
-            setDraggedEventIndex(-1);
+            setIsDraggingPaper(false);
+            setDraggedPaperIndex(-1);
         };
 
         canvas.addEventListener("mousedown", handleMouseDown);
@@ -359,7 +359,7 @@ export default function App({ onNavigate }: AppProps) {
             document.removeEventListener("visibilitychange", handleVisibility);
             canvas.removeEventListener("wheel", handleWheel as any);
         };
-    }, [events, papers, panOffset, isPanning, isDraggingEvent, draggedEventIndex, dragOffset, scale]);
+        }, [events, papers, panOffset, isPanning, isDraggingPaper, draggedPaperIndex, dragOffset, scale]);
 
     // Handle window resize for responsive design
     useEffect(() => {
