@@ -168,44 +168,18 @@ async function createEvent(eventData: Omit<Event, 'id' | 'createdAt'>): Promise<
   }
 }
 
-// Simple in-worker queue for coordinate updates so UI doesn't block
-type CoordinateUpdate = { id: string; x: number; y: number };
-const coordQueue: CoordinateUpdate[] = [];
-let isProcessingQueue = false;
-
-async function processCoordQueue() {
-  if (isProcessingQueue) return;
-  isProcessingQueue = true;
-  try {
-    while (coordQueue.length > 0) {
-      const { id, x, y } = coordQueue.shift() as CoordinateUpdate;
-      console.log(`📡 Worker updating Notion page ${id} → (${x}, ${y})`);
-      try {
-        await fetch(`${NOTION_API_BASE}/update-worker`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ pageId: id, x, y })
-        });
-      } catch (e) {
-        // Requeue on transient failure and break to avoid tight loop
-        coordQueue.unshift({ id, x, y });
-        break;
-      }
-      // small delay to avoid hammering API
-      await delay(100);
-    }
-  } finally {
-    isProcessingQueue = false;
-  }
-}
-
-// Update existing event via queued background task for coordinates
+// Update existing event: call Notion update immediately on release
 async function updateEvent(id: string, eventData: Partial<Event>): Promise<Event> {
   try {
     if (eventData.x !== undefined || eventData.y !== undefined) {
-      coordQueue.push({ id, x: eventData.x || 0, y: eventData.y || 0 });
-      // fire and forget
-      processCoordQueue();
+      const x = eventData.x || 0;
+      const y = eventData.y || 0;
+      console.log(`📡 Worker immediate update Notion page ${id} → (${x}, ${y})`);
+      await fetch(`${NOTION_API_BASE}/update-worker`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pageId: id, x, y })
+      });
       return { id, ...eventData } as Event;
     }
     console.log(`Updated event ${id} with data:`, eventData);
