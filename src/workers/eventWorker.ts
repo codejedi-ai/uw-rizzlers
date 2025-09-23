@@ -175,11 +175,17 @@ async function updateEvent(id: string, eventData: Partial<Event>): Promise<Event
       const x = eventData.x || 0;
       const y = eventData.y || 0;
       console.log(`📡 Worker immediate update Notion page ${id} → (${x}, ${y})`);
-      await fetch(`${NOTION_API_BASE}/update-worker`, {
+      // Fire-and-forget: do not await so UI remains snappy; errors logged in worker
+      fetch(`${NOTION_API_BASE}/update-worker`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pageId: id, x, y })
-      });
+      }).then(async (res) => {
+        if (!res.ok) {
+          const t = await res.text().catch(() => '');
+          console.error(`Update-worker HTTP ${res.status}: ${t}`);
+        }
+      }).catch((e) => console.error('Update-worker fetch failed:', e));
       return { id, ...eventData } as Event;
     }
     console.log(`Updated event ${id} with data:`, eventData);
