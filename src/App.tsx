@@ -21,6 +21,13 @@ export default function App({ onNavigate }: AppProps) {
     const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
     const [isPanning, setIsPanning] = useState(false);
     const [scale, setScale] = useState(1);
+    // Multi-touch/pinch state
+    const activePointersRef = useRef<Map<number, { x: number; y: number }>>(new Map());
+    const isPinchingRef = useRef(false);
+    const pinchStartDistanceRef = useRef(0);
+    const pinchStartScaleRef = useRef(1);
+    const pinchStartMidRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+    const pinchStartPanRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
     const [lastPanPoint, setLastPanPoint] = useState({ x: 0, y: 0 });
     const [screenWidth, setScreenWidth] = useState(window.innerWidth);
     const [isDraggingPaper, setIsDraggingPaper] = useState(false);
@@ -170,6 +177,7 @@ export default function App({ onNavigate }: AppProps) {
 
         // Event handlers for panning, dragging events, and clicking
         const handleMouseDown = (e: MouseEvent) => {
+            if (isPinchingRef.current) return; // ignore presses during pinch
             const rect = canvas.getBoundingClientRect();
             const mouseX = e.clientX - rect.left;
             const mouseY = e.clientY - rect.top;
@@ -227,6 +235,7 @@ export default function App({ onNavigate }: AppProps) {
             const rect = canvas.getBoundingClientRect();
             const mouseX = e.clientX - rect.left;
             const mouseY = e.clientY - rect.top;
+            if (isPinchingRef.current) return; // pinch gesture manages its own movement
 
             if (isPanning) {
                 const deltaX = mouseX - lastPanPoint.x;
@@ -314,10 +323,62 @@ export default function App({ onNavigate }: AppProps) {
         canvas.addEventListener("mousedown", handleMouseDown);
         // Pointer support for touch devices
         const handlePointerDown = (e: PointerEvent) => {
-            // Normalize to mouse down path
-            handleMouseDown(e as unknown as MouseEvent);
+            // Track pointers for pinch
+            activePointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            if (activePointersRef.current.size === 2) {
+                // Begin pinch
+                const pts = Array.from(activePointersRef.current.values());
+                const dx = pts[1].x - pts[0].x;
+                const dy = pts[1].y - pts[0].y;
+                const dist = Math.hypot(dx, dy);
+                pinchStartDistanceRef.current = dist || 1;
+                pinchStartScaleRef.current = scale;
+                const mid = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
+                pinchStartMidRef.current = mid;
+                pinchStartPanRef.current = { ...panOffset };
+                isPinchingRef.current = true;
+                // cancel any dragging
+                setIsDraggingPaper(false);
+                setDraggedPaperIndex(-1);
+                setIsPanning(false);
+            } else if (activePointersRef.current.size === 1) {
+                // Single pointer behaves like mouse down
+                handleMouseDown(e as unknown as MouseEvent);
+            }
         };
         canvas.addEventListener("pointerdown", handlePointerDown, { passive: false } as any);
+        const handlePointerMove = (e: PointerEvent) => {
+            if (!activePointersRef.current.has(e.pointerId)) return;
+            activePointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            if (isPinchingRef.current && activePointersRef.current.size >= 2) {
+                const pts = Array.from(activePointersRef.current.values());
+                const dx = pts[1].x - pts[0].x;
+                const dy = pts[1].y - pts[0].y;
+                const dist = Math.hypot(dx, dy) || 1;
+                const rect = canvas.getBoundingClientRect();
+                const mid = { x: (pts[0].x + pts[1].x) / 2 - rect.left, y: (pts[0].y + pts[1].y) / 2 - rect.top };
+                const startMid = { x: pinchStartMidRef.current.x - rect.left, y: pinchStartMidRef.current.y - rect.top };
+                const s0 = pinchStartScaleRef.current;
+                const s1 = Math.min(3, Math.max(0.25, s0 * (dist / pinchStartDistanceRef.current)));
+                // Keep world point under the original midpoint fixed
+                const worldX = (startMid.x - pinchStartPanRef.current.x) / s0;
+                const worldY = (startMid.y - pinchStartPanRef.current.y) / s0;
+                const newPanX = mid.x - worldX * s1;
+                const newPanY = mid.y - worldY * s1;
+                setScale(s1);
+                setPanOffset({ x: newPanX, y: newPanY });
+                e.preventDefault();
+            }
+        };
+        window.addEventListener("pointermove", handlePointerMove as any, { passive: false } as any);
+        const endPointer = (e: PointerEvent) => {
+            activePointersRef.current.delete(e.pointerId);
+            if (activePointersRef.current.size < 2) {
+                isPinchingRef.current = false;
+            }
+        };
+        window.addEventListener("pointerup", endPointer as any);
+        window.addEventListener("pointercancel", endPointer as any);
         // Use window-level listeners to ensure drag end is captured even outside the canvas
         window.addEventListener("mousemove", handleMouseMove);
         window.addEventListener("mouseup", handleMouseUp);
@@ -361,6 +422,9 @@ export default function App({ onNavigate }: AppProps) {
             window.removeEventListener("pointermove", handleMouseMove as any);
             window.removeEventListener("pointerup", handleMouseUp as any);
             window.removeEventListener("pointercancel", handleMouseUp as any);
+            window.removeEventListener("pointermove", handlePointerMove as any);
+            window.removeEventListener("pointerup", endPointer as any);
+            window.removeEventListener("pointercancel", endPointer as any);
             window.removeEventListener("blur", handleMouseUp);
             document.removeEventListener("visibilitychange", handleVisibility);
             canvas.removeEventListener("wheel", handleWheel as any);
