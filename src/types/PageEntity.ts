@@ -1,15 +1,14 @@
 import { Event } from "./Event";
+import { Subject } from "./Observer";
 
-export abstract class PageEntity {
+export abstract class PageEntity extends Subject {
   public isHoveringButton: boolean = false;
-  private positionObservers: Array<(id: string, x: number, y: number) => void> = [];
-  private deleteObservers: Array<(id: string) => void> = [];
 
   constructor(
     public event: Event,
     public width: number = 200,
     public height: number = 150
-  ) {}
+  ) { super(); }
 
   // Compute paper width based on title length (max 100 chars)
   private getComputedWidth(): number {
@@ -21,30 +20,14 @@ export abstract class PageEntity {
     return Math.max(minWidth, Math.min(computed, maxWidth));
   }
 
-  // Observer pattern: subscribe to position commits
-  addPositionObserver(cb: (id: string, x: number, y: number) => void) {
-    this.positionObservers.push(cb);
-  }
-
-  removePositionObserver(cb: (id: string, x: number, y: number) => void) {
-    this.positionObservers = this.positionObservers.filter(fn => fn !== cb);
-  }
-
+  // Observer pattern: position commit
   commitPosition() {
-    this.positionObservers.forEach(cb => cb(this.event.id, this.event.x, this.event.y));
+    this.notifyPosition(this.event.id, this.event.x, this.event.y);
   }
 
-  // Observer pattern: deletion subscription
-  addDeleteObserver(cb: (id: string) => void) {
-    this.deleteObservers.push(cb);
-  }
-
-  removeDeleteObserver(cb: (id: string) => void) {
-    this.deleteObservers = this.deleteObservers.filter(fn => fn !== cb);
-  }
-
-  notifyDelete() {
-    this.deleteObservers.forEach(cb => cb(this.event.id));
+  // Observer pattern: deletion notify
+  notifyDeletion() {
+    super["notifyDelete"](this.event.id);
   }
 
   // Get push pin coordinates (75px above the paper center)
