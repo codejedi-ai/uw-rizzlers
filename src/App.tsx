@@ -310,9 +310,18 @@ export default function App({ onNavigate }: AppProps) {
         };
 
         canvas.addEventListener("mousedown", handleMouseDown);
-        canvas.addEventListener("mousemove", handleMouseMove);
-        canvas.addEventListener("mouseup", handleMouseUp);
-        canvas.addEventListener("mouseleave", handleMouseUp);
+        // Use window-level listeners to ensure drag end is captured even outside the canvas
+        window.addEventListener("mousemove", handleMouseMove);
+        window.addEventListener("mouseup", handleMouseUp);
+        window.addEventListener("mouseleave", handleMouseUp);
+        // Pointer API fallbacks to guarantee release
+        window.addEventListener("pointermove", handleMouseMove as any);
+        window.addEventListener("pointerup", handleMouseUp as any);
+        window.addEventListener("pointercancel", handleMouseUp as any);
+        // End drag on tab switch or window blur
+        const handleVisibility = () => handleMouseUp();
+        window.addEventListener("blur", handleMouseUp);
+        document.addEventListener("visibilitychange", handleVisibility);
         const handleWheel = (e: WheelEvent) => {
             // Zoom towards mouse position
             const rect = canvas.getBoundingClientRect();
@@ -338,9 +347,14 @@ export default function App({ onNavigate }: AppProps) {
         return () => {
             cancelAnimationFrame(animationId);
             canvas.removeEventListener("mousedown", handleMouseDown);
-            canvas.removeEventListener("mousemove", handleMouseMove);
-            canvas.removeEventListener("mouseup", handleMouseUp);
-            canvas.removeEventListener("mouseleave", handleMouseUp);
+            window.removeEventListener("mousemove", handleMouseMove);
+            window.removeEventListener("mouseup", handleMouseUp);
+            window.removeEventListener("mouseleave", handleMouseUp);
+            window.removeEventListener("pointermove", handleMouseMove as any);
+            window.removeEventListener("pointerup", handleMouseUp as any);
+            window.removeEventListener("pointercancel", handleMouseUp as any);
+            window.removeEventListener("blur", handleMouseUp);
+            document.removeEventListener("visibilitychange", handleVisibility);
             canvas.removeEventListener("wheel", handleWheel as any);
         };
     }, [events, papers, panOffset, isPanning, isDraggingEvent, draggedEventIndex, dragOffset, scale]);
