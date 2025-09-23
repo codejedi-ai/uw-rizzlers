@@ -3,7 +3,7 @@ import React, { useRef, useEffect, useState } from "react";
 import { Event } from "./types/Event";
 import { Paper } from "./shapes/Paper";
 import AddItemForm from "./components/AddItemForm";
-import DropdownMenu from "./components/DropdownMenu";
+import Navbar from "./components/Navbar";
 import { workerManager } from "./utils/workerManager";
 import { deletionManager } from "./utils/deletionManager";
 
@@ -113,6 +113,11 @@ export default function App({ onNavigate }: AppProps) {
         };
         
         updateCanvasSize();
+
+        // Center world origin (0,0) at the screen center on initial load
+        if (panOffset.x === 0 && panOffset.y === 0) {
+            setPanOffset({ x: canvas.width / 2, y: canvas.height / 2 });
+        }
 
         // Draw function to continuously update the canvas
         const draw = () => {
@@ -281,8 +286,23 @@ export default function App({ onNavigate }: AppProps) {
             }
         };
 
-        const handleMouseUp = () => {
+        const handleMouseUp = async () => {
             setIsPanning(false);
+            
+            // If we were dragging an event, update its coordinates in the database
+            if (isDraggingEvent && draggedEventIndex >= 0) {
+                const event = events[draggedEventIndex];
+                try {
+                    await workerManager.updateEvent(event.id, {
+                        x: event.x,
+                        y: event.y
+                    });
+                    console.log(`✅ Updated coordinates for "${event.title}" to (${event.x}, ${event.y})`);
+                } catch (error) {
+                    console.error('Failed to update event coordinates:', error);
+                }
+            }
+            
             setIsDraggingEvent(false);
             setDraggedEventIndex(-1);
         };
@@ -396,92 +416,12 @@ export default function App({ onNavigate }: AppProps) {
             overflow: "hidden",
             boxSizing: "border-box"
         }}>
-            <header 
-                style={{
-                    position: "fixed", 
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    background: "#000000",
-                    color: "white",
-                    padding: screenWidth < 768 ? "10px 0" : "15px 0",
-                    zIndex: 1000,
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.3)"
-                }}
-            >
-                <div style={{ 
-                    display: "flex", 
-                    justifyContent: "space-between", 
-                    alignItems: "center", 
-                    width: "100%",
-                    maxWidth: "100vw",
-                    padding: screenWidth < 768 ? "0 10px" : "0 20px",
-                    gap: screenWidth < 768 ? "5px" : "15px",
-                    boxSizing: "border-box"
-                }}>
-                    {/* Left: Push Pin Icon */}
-                    <div style={{ 
-                        display: "flex", 
-                        alignItems: "center", 
-                        fontSize: screenWidth < 768 ? "18px" : "24px",
-                        flexShrink: 0,
-                        minWidth: screenWidth < 480 ? "30px" : "40px"
-                    }}>
-                        📌
-                    </div>
-                    
-                    {/* Center: Title */}
-                    <div style={{ 
-                        flex: 1, 
-                        textAlign: "center",
-                        minWidth: 0, // Allow shrinking
-                        overflow: "hidden",
-                        padding: screenWidth < 480 ? "0 5px" : "0 10px"
-                    }}>
-                        <h1 style={{ 
-                            margin: 0, 
-                            fontSize: screenWidth < 480 ? "14px" : screenWidth < 768 ? "16px" : screenWidth < 1024 ? "20px" : "28px",
-                            fontWeight: "bold",
-                            letterSpacing: screenWidth < 768 ? "0.5px" : "1px",
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            color: "white"
-                        }}>
-                            {screenWidth < 480 ? "Rizz Lords" : 
-                             screenWidth < 768 ? "UW Rizz Lords" : 
-                             "UW Rizz Lords Bulletin Board"}
-                        </h1>
-                    </div>
-                    
-                    {/* Right: Dropdown Menu */}
-                    <div style={{ 
-                        display: "flex", 
-                        alignItems: "center",
-                        flexShrink: 0
-                    }}>
-                        <DropdownMenu
-                            buttonIcon="⚙️"
-                            buttonTitle="Menu - Add events and manage items"
-                            items={[
-                                {
-                                    id: 'add',
-                                    label: 'Add Event',
-                                    icon: '+',
-                                    action: () => setShowAddForm(true)
-                                },
-                                {
-                                    id: 'delete',
-                                    label: isDeleteMode ? 'Exit Delete Mode' : 'Delete Mode',
-                                    icon: '🗑️',
-                                    action: () => setIsDeleteMode(!isDeleteMode),
-                                    variant: isDeleteMode ? 'danger' : 'default'
-                                }
-                            ]}
-                        />
-                    </div>
-                </div>
-            </header>
+            <Navbar
+                screenWidth={screenWidth}
+                isDeleteMode={isDeleteMode}
+                onToggleDeleteMode={() => setIsDeleteMode(!isDeleteMode)}
+                onAddEvent={() => setShowAddForm(true)}
+            />
             
             <div style={{ 
                 position: "fixed",

@@ -9,6 +9,16 @@ export class Paper {
     public height: number = 150
   ) {}
 
+  // Compute paper width based on title length (max 100 chars)
+  private getComputedWidth(): number {
+    const titleLength = Math.min((this.event.title || '').length, 100);
+    const minWidth = 200;
+    const maxWidth = 500;
+    const extraPerChar = 2; // pixels per character
+    const computed = minWidth + titleLength * extraPerChar;
+    return Math.max(minWidth, Math.min(computed, maxWidth));
+  }
+
   // Get push pin coordinates (75px above the paper center)
   get pushPinX(): number {
     return this.event.x;
@@ -19,8 +29,9 @@ export class Paper {
   }
 
   hitTest(mx: number, my: number): boolean {
-    return mx >= this.event.x - this.width / 2 && 
-           mx <= this.event.x + this.width / 2 && 
+    const width = this.getComputedWidth();
+    return mx >= this.event.x - width / 2 && 
+           mx <= this.event.x + width / 2 && 
            my >= this.event.y - this.height / 2 && 
            my <= this.event.y + this.height / 2;
   }
@@ -36,9 +47,10 @@ export class Paper {
 
   // Check if click is on the link button
   isClickOnLinkButton(mx: number, my: number): boolean {
-    const buttonX = this.event.x - this.width / 2 + 10;
+    const width = this.getComputedWidth();
+    const buttonX = this.event.x - width / 2 + 10;
     const buttonY = this.event.y + this.height / 2 - 35;
-    const buttonWidth = this.width - 20;
+    const buttonWidth = width - 20;
     const buttonHeight = 25;
     
     return mx >= buttonX && mx <= buttonX + buttonWidth && 
@@ -49,7 +61,8 @@ export class Paper {
   draw(gc: CanvasRenderingContext2D): void {
     gc.save();
     
-    const x = this.event.x - this.width / 2;
+    const width = this.getComputedWidth();
+    const x = this.event.x - width / 2;
     const y = this.event.y - this.height / 2;
     
     // Draw paper background
@@ -57,14 +70,14 @@ export class Paper {
     gc.strokeStyle = "#333";
     gc.lineWidth = 2;
     gc.beginPath();
-    gc.roundRect(x, y, this.width, this.height, 8);
+    gc.roundRect(x, y, width, this.height, 8);
     gc.fill();
     gc.stroke();
     
     // Draw shadow effect
     gc.fillStyle = "rgba(0, 0, 0, 0.1)";
     gc.beginPath();
-    gc.roundRect(x + 3, y + 3, this.width, this.height, 8);
+    gc.roundRect(x + 3, y + 3, width, this.height, 8);
     gc.fill();
     
     // Draw title
@@ -74,8 +87,9 @@ export class Paper {
     gc.textBaseline = "top";
     
     // Wrap text if too long
-    const maxWidth = this.width - 20;
-    const words = this.event.title.split(' ');
+    const maxWidth = width - 20;
+    const displayTitle = (this.event.title || '').slice(0, 100);
+    const words = displayTitle.split(' ');
     let line = '';
     let yPos = y + 20;
     
@@ -130,6 +144,13 @@ export class Paper {
       this.drawLinkButton(gc);
     }
     
+    // Draw UUID below the paper as a footer (outside the paper)
+    gc.fillStyle = "#444";
+    gc.font = "10px Arial";
+    gc.textAlign = "center";
+    gc.textBaseline = "top";
+    gc.fillText(this.event.id, this.event.x, y + this.height + 6);
+    
     // Draw push pin
     this.drawPushPin(gc);
     
@@ -170,9 +191,10 @@ export class Paper {
 
   // Draw the link button
   private drawLinkButton(gc: CanvasRenderingContext2D): void {
-    const buttonX = this.event.x - this.width / 2 + 10;
+    const width = this.getComputedWidth();
+    const buttonX = this.event.x - width / 2 + 10;
     const buttonY = this.event.y + this.height / 2 - 35;
-    const buttonWidth = this.width - 20;
+    const buttonWidth = width - 20;
     const buttonHeight = 25;
 
     // Hover effect - scale and shadow

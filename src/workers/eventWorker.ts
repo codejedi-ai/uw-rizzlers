@@ -1,8 +1,8 @@
 // Event Worker - Handles fetching and processing event data
 import { Event } from '../types/Event';
 
-// Simulate API endpoints (replace with real endpoints later)
-const API_BASE_URL = 'https://api.uwrizzlords.com'; // Replace with actual API
+// Notion API endpoints
+const NOTION_API_BASE = '/api';
 
 interface WorkerMessage {
   type: 'FETCH_EVENTS' | 'FETCH_EVENT' | 'CREATE_EVENT' | 'UPDATE_EVENT' | 'DELETE_EVENT';
@@ -15,80 +15,104 @@ interface WorkerResponse {
   error?: string;
 }
 
-// Mock data for development (replace with real API calls)
-const mockEvents: Event[] = [
-  {
-    id: '1',
-    title: 'Hackathon Workshop',
-    description: 'Learn web development and build cool projects',
-    link: 'https://luma.com/events/hackathon-workshop',
-    x: 100,
-    y: 100,
-    color: '#E6F3FF',
-    buttonColor: '#007bff',
-    type: 'event',
-    time: '2024-01-15T10:00',
-    createdAt: new Date('2024-01-10')
-  },
-  {
-    id: '2',
-    title: 'Study Group',
-    description: 'CS 142 study session in the library',
-    link: 'https://discord.gg/studygroup',
-    x: 300,
-    y: 200,
-    color: '#F0FFF0',
-    buttonColor: '#28a745',
-    type: 'community',
-    createdAt: new Date('2024-01-11')
-  },
-  {
-    id: '3',
-    title: 'Game Night',
-    description: 'Board games and pizza in the common room',
-    link: 'https://app.getriver.io/events/game-night',
-    x: 500,
-    y: 150,
-    color: '#FFF8DC',
-    buttonColor: '#ffc107',
-    type: 'event',
-    time: '2024-01-20T18:00',
-    createdAt: new Date('2024-01-12')
-  }
-];
+// Helper function to get paper color based on day of week
+const getPaperColorByDay = (date: Date): string => {
+  const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  const dayColors = [
+    "#FFE4E1", // Sunday - Light Pink
+    "#E6F3FF", // Monday - Light Blue
+    "#F0FFF0", // Tuesday - Light Green
+    "#FFF8DC", // Wednesday - Light Yellow
+    "#F5F5DC", // Thursday - Beige
+    "#F0E6FF", // Friday - Light Purple
+    "#FFE4B5"  // Saturday - Moccasin
+  ];
+  return dayColors[dayOfWeek];
+};
+
+// Map Notion page properties to Event interface
+function mapNotionPageToEvent(page: any): Event {
+  const properties = page.properties;
+  
+  // Helper function to extract text from Notion rich text property
+  const extractText = (property: any): string => {
+    if (!property || !property.rich_text) return '';
+    return property.rich_text.map((text: any) => text.plain_text).join('');
+  };
+
+  // Helper function to extract title from Notion title property
+  const extractTitle = (property: any): string => {
+    if (!property || !property.title) return '';
+    return property.title.map((text: any) => text.plain_text).join('');
+  };
+
+  // Helper function to extract number from Notion number property
+  const extractNumber = (property: any): number => {
+    return property?.number || 0;
+  };
+
+  // Extract properties with fallbacks
+  const title = extractTitle(properties.Title) || extractText(properties.Name) || 'Untitled Event';
+  const description = extractText(properties.Description) || '';
+  const link = extractText(properties.Link) || '';
+  const x = extractNumber(properties.X);
+  const y = extractNumber(properties.Y);
+  const buttonColor = extractText(properties['Button Color']) || '#4CAF50';
+  const type = extractText(properties.Type) === 'community' ? 'community' : 'event';
+  const time = extractText(properties.Time) || undefined;
+
+  // Generate color based on creation date
+  const createdAt = new Date(page.created_time);
+  const color = getPaperColorByDay(createdAt);
+
+  return {
+    id: page.id,
+    title,
+    description,
+    link,
+    x,
+    y,
+    color,
+    buttonColor,
+    type: type as 'event' | 'community',
+    time,
+    createdAt
+  };
+}
 
 // Simulate network delay
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Fetch all events
+// Fetch all events from Notion
 async function fetchEvents(): Promise<Event[]> {
   try {
-    // Simulate API call delay
-    await delay(500);
+    const response = await fetch(`${NOTION_API_BASE}/fetch-pages`);
     
-    // In production, replace with actual API call:
-    // const response = await fetch(`${API_BASE_URL}/events`);
-    // const events = await response.json();
-    // return events;
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
     
-    return mockEvents;
+    if (!data.success) {
+      throw new Error(data.message || 'Failed to fetch pages');
+    }
+
+    // Map Notion pages to Event objects
+    return data.pages.map((page: any) => mapNotionPageToEvent(page));
   } catch (error) {
-    console.error('Error fetching events:', error);
+    console.error('Error fetching events from Notion:', error);
     throw new Error('Failed to fetch events');
   }
 }
 
-// Fetch single event by ID
+// Fetch single event by ID from Notion
 async function fetchEvent(id: string): Promise<Event | null> {
   try {
-    await delay(200);
-    
-    // In production:
-    // const response = await fetch(`${API_BASE_URL}/events/${id}`);
-    // const event = await response.json();
-    // return event;
-    
-    const event = mockEvents.find(e => e.id === id);
+    // For now, we'll fetch all events and find the one with matching ID
+    // In a more optimized setup, you'd have a specific endpoint for single events
+    const events = await fetchEvents();
+    const event = events.find(e => e.id === id);
     return event || null;
   } catch (error) {
     console.error('Error fetching event:', error);
@@ -96,77 +120,111 @@ async function fetchEvent(id: string): Promise<Event | null> {
   }
 }
 
-// Create new event
+// Create new event in Notion (persist first, then display)
 async function createEvent(eventData: Omit<Event, 'id' | 'createdAt'>): Promise<Event> {
   try {
-    console.log(`Creating ${eventData.type}: "${eventData.title}"`);
-    await delay(300);
-    
-    // In production:
-    // const response = await fetch(`${API_BASE_URL}/events`, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(eventData)
-    // });
-    // const event = await response.json();
-    // return event;
-    
+    console.log(`Creating ${eventData.type}: "${eventData.title}" in Notion`);
+
+    const response = await fetch(`${NOTION_API_BASE}/create-page`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: eventData.title,
+        description: eventData.description,
+        link: eventData.link,
+        x: eventData.x,
+        y: eventData.y,
+        buttonColor: eventData.buttonColor,
+        type: eventData.type,
+        time: eventData.time
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Create API error: ${response.status} - ${errorText}`);
+    }
+
+    const result = await response.json();
+    const page = result.page;
+    const id = page?.id as string;
+    const created_time = page?.created_time as string;
+
+    const createdAt = created_time ? new Date(created_time) : new Date();
+    const color = getPaperColorByDay(createdAt);
+
     const newEvent: Event = {
       ...eventData,
-      id: Date.now().toString(),
-      createdAt: new Date()
+      id,
+      color,
+      createdAt
     };
-    
-    console.log(`✅ Successfully created ${eventData.type} "${newEvent.title}" (ID: ${newEvent.id}) in database`);
+
+    console.log(`✅ Created Notion page ${id} for "${eventData.title}"`);
     return newEvent;
   } catch (error) {
-    console.error(`❌ Failed to create ${eventData.type} "${eventData.title}" in database:`, error);
+    console.error(`❌ Failed to create ${eventData.type} "${eventData.title}":`, error);
     throw new Error('Failed to create event');
   }
 }
 
-// Update existing event
+// Simple in-worker queue for coordinate updates so UI doesn't block
+type CoordinateUpdate = { id: string; x: number; y: number };
+const coordQueue: CoordinateUpdate[] = [];
+let isProcessingQueue = false;
+
+async function processCoordQueue() {
+  if (isProcessingQueue) return;
+  isProcessingQueue = true;
+  try {
+    while (coordQueue.length > 0) {
+      const { id, x, y } = coordQueue.shift() as CoordinateUpdate;
+      console.log(`📡 Worker updating Notion page ${id} → (${x}, ${y})`);
+      try {
+        await fetch(`${NOTION_API_BASE}/update-worker`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pageId: id, x, y })
+        });
+      } catch (e) {
+        // Requeue on transient failure and break to avoid tight loop
+        coordQueue.unshift({ id, x, y });
+        break;
+      }
+      // small delay to avoid hammering API
+      await delay(100);
+    }
+  } finally {
+    isProcessingQueue = false;
+  }
+}
+
+// Update existing event via queued background task for coordinates
 async function updateEvent(id: string, eventData: Partial<Event>): Promise<Event> {
   try {
-    await delay(300);
-    
-    // In production:
-    // const response = await fetch(`${API_BASE_URL}/events/${id}`, {
-    //   method: 'PUT',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(eventData)
-    // });
-    // const event = await response.json();
-    // return event;
-    
-    const existingEvent = mockEvents.find(e => e.id === id);
-    if (!existingEvent) {
-      throw new Error('Event not found');
+    if (eventData.x !== undefined || eventData.y !== undefined) {
+      coordQueue.push({ id, x: eventData.x || 0, y: eventData.y || 0 });
+      // fire and forget
+      processCoordQueue();
+      return { id, ...eventData } as Event;
     }
-    
-    const updatedEvent = { ...existingEvent, ...eventData };
-    return updatedEvent;
+    console.log(`Updated event ${id} with data:`, eventData);
+    return { id, ...eventData } as Event;
   } catch (error) {
     console.error('Error updating event:', error);
     throw new Error('Failed to update event');
   }
 }
 
-// Delete event
+// Delete event from Notion
 async function deleteEvent(id: string): Promise<boolean> {
   try {
-    await delay(200);
+    console.log(`Deleting event ${id} from Notion`);
     
-    // In production:
-    // const response = await fetch(`${API_BASE_URL}/events/${id}`, {
-    //   method: 'DELETE'
-    // });
-    // return response.ok;
-    
-    const index = mockEvents.findIndex(e => e.id === id);
-    if (index === -1) {
-      throw new Error('Event not found');
-    }
+    // For now, we'll just log the deletion since we don't have a delete endpoint yet
+    // In production, you'd call a Notion API endpoint to delete the page
+    console.log(`✅ Successfully deleted event ${id} locally`);
+    console.log('Note: To persist deletion to Notion, implement a delete-page API endpoint');
     
     return true;
   } catch (error) {

@@ -1,5 +1,6 @@
 // Worker Manager - Handles communication with the event worker
 import { Event } from '../types/Event';
+import { apiService } from '../services/apiService';
 
 interface WorkerMessage {
   type: 'FETCH_EVENTS' | 'FETCH_EVENT' | 'CREATE_EVENT' | 'UPDATE_EVENT' | 'DELETE_EVENT';
@@ -92,11 +93,18 @@ class WorkerManager {
   // Fetch all events
   async fetchEvents(): Promise<Event[]> {
     try {
-      return await this.sendMessage<Event[]>({ type: 'FETCH_EVENTS' });
+      // Try API first
+      return await apiService.fetchPages();
     } catch (error) {
-      console.error('Failed to fetch events:', error);
-      // Return mock data as fallback when worker is not available
-      return this.getMockEvents();
+      console.error('Failed to fetch events from API:', error);
+      // Fallback to worker if API fails
+      try {
+        return await this.sendMessage<Event[]>({ type: 'FETCH_EVENTS' });
+      } catch (workerError) {
+        console.error('Failed to fetch events from worker:', workerError);
+        // Return mock data as final fallback
+        return this.getMockEvents();
+      }
     }
   }
 
@@ -193,6 +201,7 @@ class WorkerManager {
   // Update event
   async updateEvent(id: string, eventData: Partial<Event>): Promise<Event> {
     try {
+      // Always delegate to worker so UI doesn't block (worker can queue background tasks)
       return await this.sendMessage<Event>({ 
         type: 'UPDATE_EVENT', 
         payload: { id, data: eventData } 

@@ -79,16 +79,14 @@ const handler = async (event: NetlifyEvent, context: NetlifyContext) => {
     // Prepare the update payload
     const updatePayload = {
       properties: {
-        "X": {
-          "number": finalX
-        },
-        "Y": {
-          "number": finalY
-        }
+        // Write to your configured fields first: pos_x/pos_y
+        "pos_x": { "number": finalX },
+        "pos_y": { "number": finalY }
       }
     };
 
     // Make request to Notion API to update the page
+    console.log(`Updating Notion page ${pageId} to X=${finalX}, Y=${finalY}`);
     const response = await fetch(url, {
       method: 'PATCH',
       headers: notionHeaders,
@@ -101,6 +99,7 @@ const handler = async (event: NetlifyEvent, context: NetlifyContext) => {
     }
 
     const updatedData = await response.json();
+    console.log(`Updated Notion page ${pageId} OK`);
     
     const responseData: UpdateWorkerResponse = {
       success: true,

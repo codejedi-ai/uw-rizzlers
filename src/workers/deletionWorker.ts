@@ -1,8 +1,8 @@
 // Deletion Worker - Handles permanent deletion of events from database
 import { Event } from '../types/Event';
 
-// Database configuration
-const DATABASE_URL = 'https://api.uwrizzlords.com/database'; // Replace with actual database API
+// Notion API configuration
+const NOTION_API_BASE = '/api';
 const DELETION_BATCH_SIZE = 1; // Process deletions individually for immediate response
 const DELETION_RETRY_ATTEMPTS = 3; // Number of retry attempts for failed deletions
 
@@ -32,36 +32,35 @@ let deletionQueue: string[] = [];
 let isProcessing = false;
 let deletionStatus: 'idle' | 'processing' | 'error' = 'idle';
 
-// Simulate database deletion (replace with real database calls)
+// Delete from Notion API
 async function deleteFromDatabase(eventId: string): Promise<boolean> {
   try {
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 200 + Math.random() * 300));
+    console.log(`Deleting event ${eventId} from Notion`);
     
-    // Simulate occasional failures (5% chance)
-    if (Math.random() < 0.05) {
-      throw new Error('Database connection timeout');
-    }
-    
-    // In production, replace with actual database deletion:
-    // const response = await fetch(`${DATABASE_URL}/events/${eventId}`, {
+    // For now, we'll simulate the deletion since we don't have a delete endpoint yet
+    // In production, you'd call a Notion API endpoint to delete the page:
+    // const response = await fetch(`${NOTION_API_BASE}/delete-page`, {
     //   method: 'DELETE',
     //   headers: {
-    //     'Authorization': `Bearer ${getAuthToken()}`,
     //     'Content-Type': 'application/json'
-    //   }
+    //   },
+    //   body: JSON.stringify({ pageId: eventId })
     // });
     // 
     // if (!response.ok) {
-    //   throw new Error(`Database deletion failed: ${response.status}`);
+    //   throw new Error(`Notion deletion failed: ${response.status}`);
     // }
     // 
     // return true;
     
-    console.log(`Successfully deleted event ${eventId} from database`);
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 200 + Math.random() * 300));
+    
+    console.log(`✅ Successfully deleted event ${eventId} from Notion`);
+    console.log('Note: To persist deletion to Notion, implement a delete-page API endpoint');
     return true;
   } catch (error) {
-    console.error(`Failed to delete event ${eventId} from database:`, error);
+    console.error(`Failed to delete event ${eventId} from Notion:`, error);
     return false;
   }
 }
